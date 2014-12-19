@@ -1,0 +1,9 @@
+.cache
+.classpath
+.project
+project/.DS_Store
+project/project/target/
+project/target/
+target/
+src/test/resources/.DS_Store
+src/test/scala/.DS_Store
