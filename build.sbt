@@ -18,7 +18,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor" % "2.3.7",
   "com.typesafe.akka" %% "akka-testkit" % "2.3.7" % "test",
   "io.reactivex" %% "rxscala" % "0.22.0",
-  "com.couchbase.client" % "java-client" % "2.0.2",
+  "com.couchbase.client" % "java-client" % "2.1.1",
   "com.yammer.metrics" % "metrics-core" % "2.1.3"
 )
 

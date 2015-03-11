@@ -87,8 +87,21 @@ trait Operation[RT] {
 trait ReadOperation[RT] extends Operation[RT]{  
   private[couchnew] def lookup(key:String, bucket:AsyncBucket):Observable[BinaryDocument] = bucket.get(key, Operations.BinDocClass)
   private[couchnew] def execute(bucket:AsyncBucket):Observable[RT]
+  
+  /**
+   * Gets the content byte array data from supplied binary document, making sure to release the data after to
+   * prevent memory leaks in the netty code
+   * @param doc The document to get the content from
+   * @return an Array[Byte] representing the documents content
+   */
+  private[couchnew] def contentArray(doc:BinaryDocument) = {
+    val data = Array[Byte]()
+    doc.content().readBytes(data)
+    doc.content().release()
+    data
+  }
   private[couchnew] def decode[T](doc:BinaryDocument, dec:(Array[Byte]) => Try[T], success:T => RT):Observable[RT] = {
-    dec(doc.content.array) match{
+    dec(contentArray(doc)) match{
       case util.Failure(ex) => 
         //Might want to log this, but for now a decoding error results in an empty observable
         Observable.empty
@@ -165,7 +178,7 @@ case class MultiGet[T](keys:List[String], dec:(Array[Byte]) => Try[T] = OpDefaul
   def name = Operations.MGetOp 
   private[couchnew] def execute(bucket:AsyncBucket):Observable[Map[String, T]] = {
     
-    def decodeToTuple(doc:BinaryDocument) = dec(doc.content().array).toOption.map((doc.id, _))
+    def decodeToTuple(doc:BinaryDocument) = dec(contentArray(doc)).toOption.map((doc.id, _))
     
     Observable.
       from(keys).
@@ -658,7 +671,7 @@ case class QueryViewDocuments[T](query:QueryView, parseFunc:String => T = QueryV
       toList.
       map{ docs => 
         docs.map{ d=> 
-          val json = new String(d.content().array())
+          val json = new String(contentArray(d))
           (d.id, parseFunc(json))
         }(collection.breakOut)
       }
